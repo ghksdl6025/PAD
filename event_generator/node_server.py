@@ -12,13 +12,6 @@ app = Flask(__name__)
 # endpoint to submit a new transaction. This will be used by
 # our application to add new data (posts) to the blockchain
 
-def add_new_transaction(self, transaction):
-    tx_hash = sha256(json.dumps(transaction).encode()).hexdigest()
-    if tx_hash not in self.tx_ids:
-        self.unvalidated_transactions[tx_hash] = transaction
-        self.tx_ids.add(tx_hash)
-    return transaction
-
 @app.route('/new_transaction', methods=['POST'])
 def new_transaction():
     tx_data = request.get_json()
@@ -29,12 +22,27 @@ def new_transaction():
     #         print('WHAT', field)
     #         return "Invalid transaction data", 404
 
-    record_in_db(tx_data,'Transaction initiated')
-
+    record_in_db(tx_data)
+    try:
+        announce_new_transaction(tx_data)
+    except:
+        print('NOOOO')
     return "Success", 201
 
+def announce_new_transaction(tx_data):
+    """
+    A function to announce to the network once a transaction has been transferred.
+    Other nodes store the received transaction in the unmined memory
+    """
+    peer = 'http://172.28.1.2:8002'    
+    # peer = 'http://127.0.0.1:5001'
+    url = "{}/add_received_transaction".format(peer)
+    headers = {'Content-Type': "application/json"}
+    requests.post(url,
+                    data=json.dumps(tx_data),
+                    headers=headers)
 
-def record_in_db(transaction,activity,mode='transaction',qc_id=None):
+def record_in_db(transaction,mode='transaction',qc_id=None):
     '''
     Record invoked activity and transaction in database
     mode : default = transaction
@@ -53,25 +61,6 @@ def record_in_db(transaction,activity,mode='transaction',qc_id=None):
         dbtx['Transaction ID'] = sha256(json.dumps(transaction).encode()).hexdigest()
         dbtx['Time in DB'] = time.time()
         dbtx['Node'] = 'Node '+ str(port-8000)
-        dbtx['activity'] = activity
-        collect.insert_one(dbtx)
-
-    elif mode =='block':
-        dbtx={}
-        tx_ids = list(transaction.keys())
-        dbtx['Transaction ID'] = tx_ids
-        dbtx['Time in DB'] = time.time()
-        dbtx['Node'] = 'Node '+ str(port-8000)
-        dbtx['activity'] = activity
-        collect.insert_one(dbtx)
-
-    elif mode == 'validation':
-        dbtx={}
-        dbtx['Transaction ID'] = transaction
-        dbtx['Time in DB'] = time.time()
-        dbtx['Node'] = 'Node '+ str(port-8000)
-        dbtx['activity'] = activity
-        dbtx['Quality Control ID'] = qc_id
         collect.insert_one(dbtx)
 
     return "Success", 201

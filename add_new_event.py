@@ -57,7 +57,7 @@ if __name__=='__main__':
 
     e_time = 3
     dataframe = pd.read_csv('./data/loan_baseline.pnml_noise_0.049999999999999996_iteration_1_seed_42477_sample.csv')
-    request_transaction(dataframe,e_time=3)
+    request_transaction(dataframe,e_time=0)
     '''
     Multi processor for multiple event generator
     '''

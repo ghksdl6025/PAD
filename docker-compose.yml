@@ -23,7 +23,18 @@ services:
     networks:
       mynet:
         ipv4_address: 172.28.1.1
-
+  analyzer:
+    build: ./analyzer
+    ports:
+    - 8002:8002
+    command:
+    - python
+    - node_analyzer.py
+    - -p
+    - '8002'
+    networks:
+      mynet:
+        ipv4_address: 172.28.1.2
 networks:
   mynet:
     ipam:
