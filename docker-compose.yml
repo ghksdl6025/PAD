@@ -1,0 +1,32 @@
+version: '3.2'
+services:
+  mongodb:
+    build: ./mongodb
+    volumes:
+    - ./mongodb/data:/data/db/output
+    ports:
+    - ${MONGO_PORT}:27017
+    env_file:
+    - .env
+    networks:
+      mynet:
+        ipv4_address: 172.28.2.1
+  node1:
+    build: ./event_generator
+    ports:
+    - 8001:8001
+    command:
+    - python
+    - node_server.py
+    - -p
+    - '8001'
+    networks:
+      mynet:
+        ipv4_address: 172.28.1.1
+
+networks:
+  mynet:
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.28.1.0/16
