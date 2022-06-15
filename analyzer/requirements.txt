@@ -1,4 +1,7 @@
 Flask~=1.1
 requests~=2.22
 MarkupSafe==2.0.1
+xgboost
 sklearn
+graphviz
+pandas

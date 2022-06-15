@@ -9,5 +9,5 @@ COPY . /app
 
 RUN cd /app && pip3 install -r requirements.txt
 
-EXPOSE 5000
+EXPOSE 5001
 
