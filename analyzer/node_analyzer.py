@@ -83,6 +83,7 @@ class online_pad:
         predictions = list(event.predicted.values())[0][0]
         predictions_proba = predictions[0][0]
         predictions_value = list(predictions[1])
+
         if predictions  == 'Not Available':
             prediction_label = 'Not Available'
         else:
@@ -173,9 +174,8 @@ class online_pad:
         # Update training window and finish the case
         if nt['activity'] == 'End':
             training_window.update_window({caseid: self.case_dict[caseid]})        
-            if training_window.retraining == training_window.retraining_count:            
+            if training_window.retraining == training_window.retraining_count or training_window.retraining_reset_count ==0:            
                 self.training_models = training_utils.rf_training_stage(training_window, self.training_models)
-
                 self.prefix_wise_window = training_window.prefix_wise_window()
                 
             self.resultdict[caseid] = self.case_dict[caseid]

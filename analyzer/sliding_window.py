@@ -15,7 +15,7 @@ class training_window:
         self.window_size = window_size
         self.retraining = retraining
         self.retraining_count = 0
-        
+        self.retraining_reset_count = 0
 
         if retraining > window_size:
             raise ValueError
@@ -23,7 +23,7 @@ class training_window:
     def reset_retraining_count(self):
         if self.retraining_count == self.retraining:
             self.retraining_count =0
-
+            self.retraining_reset_count +=1
     def update_window(self, new_case):
         '''
         Add new case into the window and pull out the oldest if window size is over the condition

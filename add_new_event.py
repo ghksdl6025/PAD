@@ -63,7 +63,7 @@ def download_anomaly_result(group):
     requests.post(new_tx_address,
                         json={'target':group},
                         headers={'Content-type': 'application/json'})
-    os.system('docker cp bpmdemo2022-analyzer-1:/app/%s.csv ./'%(group))
+    os.system('docker cp pad-analyzer-1:/app/%s.csv ./'%(group))
 
 def set_threshold(threshold):
     '''
