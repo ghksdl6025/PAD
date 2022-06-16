@@ -1,4 +1,3 @@
-import pymongo
 from pymongo import MongoClient
 import time
 import json
@@ -43,6 +42,12 @@ def request_transaction(dataframe,e_time):
                         json=post_object,
                         headers={'Content-type': 'application/json'})
 
+        port2 = 8002
+        running_cases = requests.get('http://127.0.0.1:%s/get_runningcases'%(str(port2)))
+        json_result = json.loads(running_cases.content)
+        print(pd.DataFrame(json_result))
+
+
         time.sleep(e_time)
 
 def download_anomaly_result(group):
@@ -59,13 +64,44 @@ def download_anomaly_result(group):
                         json={'target':group},
                         headers={'Content-type': 'application/json'})
     os.system('docker cp bpmdemo2022-analyzer-1:/app/%s.csv ./'%(group))
-if __name__=='__main__':
 
-    e_time = 3
-    dataframe = pd.read_csv('./data/loan_baseline.pnml_noise_0.049999999999999996_iteration_1_seed_42477_sample.csv')
-    # request_transaction(dataframe,e_time=0)
-    group ='Running'
-    download_anomaly_result(group=group)
+def set_threshold(threshold):
+    '''
+    group = Running / Finished
+    '''
+    # port = 5001
+    node =2
+    port = 8000+node 
+    CONNECTED_NODE_ADDRESS = 'http://127.0.0.1:'+str(port)+'/'
+    new_tx_address = "{}/set_threshold".format(CONNECTED_NODE_ADDRESS)
+
+    requests.post(new_tx_address,
+                        json={'threshold':threshold},
+                        headers={'Content-type': 'application/json'})
+
+
+if __name__=='__main__':
+    from argparse import ArgumentParser
+    parser = ArgumentParser()
+    e_time = 0
+    parser.add_argument('-m', '--mode', default='streaming', type=str, help='streaming or stop events stream')
+
+    if parser.parse_args().mode == 'streaming':
+        print('Please type the data')
+        data = input()
+        print('Please type the threshold')
+        threshold = input()
+        args = parser.parse_args()
+        dataframe = pd.read_csv(data)
+        set_threshold(threshold)
+        request_transaction(dataframe,e_time=e_time)
+
+    elif parser.parse_args().mode == 'stop':
+        target ='Running'
+        download_anomaly_result(group=target)        
+        target ='Finished'
+        download_anomaly_result(group=target)        
+    
     
 
     '''

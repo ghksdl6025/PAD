@@ -1,5 +1,5 @@
 import json
-from flask import Flask, request,flash, Response
+from flask import Flask, request,flash, Response, jsonify,make_response,render_template_string
 import pandas as pd
 import utils
 from encoding import prefix_bin
@@ -29,7 +29,6 @@ class sliding_db:
 
 # Parameters
 enctype = 'Index-base'
-threshold = 0.01
 key_pair = {
 'ID':'caseid',
 'Activity':'activity',
@@ -50,6 +49,7 @@ class online_pad:
         self.acc_dict ={}
         self.prefix_wise_window = {}
         self.finishedcases = set()
+        self.threshold = 0.01
 
     def invoke_result(self):
         return self.resultdict
@@ -78,6 +78,7 @@ class online_pad:
         return modelid, prediction
 
     def anomaly_checker(self, event, threshold):
+        threshold = float(threshold)
         prediction_label = 'Normal'
         predictions = list(event.predicted.values())[0][0]
         predictions_proba = predictions[0][0]
@@ -85,6 +86,9 @@ class online_pad:
         if predictions  == 'Not Available':
             prediction_label = 'Not Available'
         else:
+            if event.true_label == None:
+                prediction_label = 'Not Available'
+
             if event.true_label in predictions_value:
                 labelidx = predictions_value.index(event.true_label)
 
@@ -125,7 +129,6 @@ class online_pad:
         utils.dictkey_chg(nt, key_pair)
         # Event stream change dictionary keys
         nt['ts'] = nt['ts'][:-4]
-        print(nt)
         # Check label possible
 
         # Initialize case by prefix length
@@ -151,6 +154,7 @@ class online_pad:
 
         # Set current activity as outcome of previous event
         if case_bin.prefix_length != 1:
+            print(nt['activity'])
             case_bin.prev_enc.update_truelabel(nt['activity'])
 
         # First prediction for current event
@@ -162,8 +166,9 @@ class online_pad:
         if len(training_window.getAllitems()) !=0:
             if 'window_%s'%(last_event.prefix_length) in list(self.prefix_wise_window.keys()) and 'detector_window_%s'%(last_event.prefix_length) in self.training_models.keys():
                 modelid, prediction = self.predict_activity_proba(last_event)
-        case_bin.update_prediction((modelid, (prediction,ts)))        
-        case_bin.update_anomaly(self.anomaly_checker(case_bin, threshold))
+        case_bin.update_prediction((modelid, (prediction,ts)))
+        if case_bin.prev_enc != None:
+            case_bin.update_anomaly(self.anomaly_checker(case_bin.prev_enc, self.threshold))
 
         # Update training window and finish the case
         if nt['activity'] == 'End':
@@ -187,12 +192,22 @@ class online_pad:
                         modelid, prediction = self.predict_activity_proba(last_event)
 
                 self.case_dict[x][-1].update_prediction((modelid, (prediction,ts)))     
-                self.case_dict[x][-1].update_anomaly(self.anomaly_checker(case_bin, threshold))   
+                if self.case_dict[x][-1].prev_enc != None:
+                    self.case_dict[x][-1].update_anomaly(self.anomaly_checker(case_bin.prev_enc, self.threshold))
+
             training_window.reset_retraining_count()
         else:
             self.case_dict[caseid].append(case_bin)
 
 online_analyzer = online_pad()
+
+@app.route('/set_threshold', methods=['POST'])
+def set_threshold():
+    input_threshold = request.get_json()['threshold']
+    online_analyzer.threshold = input_threshold
+    
+    return 'Threshold has been set'
+
 
 @app.route('/download_predictions', methods=['POST'])
 def send_pad_result():
@@ -202,14 +217,13 @@ def send_pad_result():
     
     return Response(result, mimetype='application/json')
 
-@app.route('/get_resultdict', methods=['GET'])
+@app.route('/get_runningcases', methods=['GET'])
 def get_resultdict():
-    resultdict = online_analyzer.invoke_result()
-    # chain_data = []
-    # for block in blockchain.chain:
-    #     chain_data.append(block.__dict__)
-    return json.dumps({"length": len(resultdict),
-                       "resultdict": resultdict})
+    # resultdict = online_analyzer.invoke_result()
+    result =online_analyzer.access_predictions('Running').to_json(orient='records')
+    # df_html = online_analyzer.access_predictions('Running').describe().to_html()
+    resp = make_response(result, 200)
+    return resp
 
 @app.route('/add_received_transaction', methods=['POST'])
 def add_transaction():
@@ -220,7 +234,7 @@ def add_transaction():
     # sliding_db.update(tx_data)
     # added = True
     online_analyzer.save_event_prep(tx_data=tx_data)
-    return "New event is added to the DB", 201
+    return "New event is added to the receiver", 201
 
 
 
