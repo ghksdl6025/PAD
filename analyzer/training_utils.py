@@ -22,7 +22,7 @@ def rf_training_stage(window, training_models):
         training_x = pw_window[x][0]
         training_y = pw_window[x][1]
         
-        clf.fit(pw_window[x][0],pw_window[x][1])
+        clf.fit(training_x, training_y)
         if 'detector_%s'%(x) not in training_models:
             training_models['detector_%s'%(x)] =[0,0]
         training_models['detector_%s'%(x)][0] += 1

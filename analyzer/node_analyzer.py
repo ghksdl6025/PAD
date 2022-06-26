@@ -155,7 +155,6 @@ class online_pad:
 
         # Set current activity as outcome of previous event
         if case_bin.prefix_length != 1:
-            print(nt['activity'])
             case_bin.prev_enc.update_truelabel(nt['activity'])
 
         # First prediction for current event

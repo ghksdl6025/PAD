@@ -38,15 +38,20 @@ def request_transaction(dataframe,e_time):
         # Submit a transaction
         new_tx_address = "{}/new_transaction".format(CONNECTED_NODE_ADDRESS)
 
-        requests.post(new_tx_address,
+        request_result= requests.post(new_tx_address,
                         json=post_object,
                         headers={'Content-type': 'application/json'})
+        print('------- New event distributed -------')
+        print(request_result.content)
+        print('-------------------------------------')
+        print('\n')
 
         port2 = 8002
         running_cases = requests.get('http://127.0.0.1:%s/get_runningcases'%(str(port2)))
         json_result = json.loads(running_cases.content)
+        print('---------- Detection Result ----------')
         print(pd.DataFrame(json_result))
-
+        print('--------------------------------------')
 
         time.sleep(e_time)
 
@@ -97,11 +102,16 @@ if __name__=='__main__':
         request_transaction(dataframe,e_time=e_time)
 
     elif parser.parse_args().mode == 'stop':
+        print('------- Download running cases detection Result -------')
         target ='Running'
         download_anomaly_result(group=target)        
+        print('.... Done')
+        print('\n')
+
+        print('------- Download finished cases detection Result -------')
         target ='Finished'
         download_anomaly_result(group=target)        
-    
+        print('.... Done')
     
 
     '''

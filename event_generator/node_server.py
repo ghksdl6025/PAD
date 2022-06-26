@@ -3,7 +3,7 @@ import json
 import time
 import pymongo
 from pymongo import MongoClient
-from flask import Flask, request,flash
+from flask import Flask, request,flash, make_response
 import requests
 import copy
 
@@ -25,10 +25,11 @@ def new_transaction():
     record_in_db(tx_data)
     try:
         announce_new_transaction(tx_data)
+        resp = make_response(tx_data, 200)
     except:
-        print('NOOOO')
-    return "Success", 201
-
+        print('Error occured')
+    return resp
+    
 def announce_new_transaction(tx_data):
     """
     A function to announce to the network once a transaction has been transferred.
