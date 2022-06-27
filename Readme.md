@@ -1,4 +1,4 @@
-# PAD: An event anomaly detection tool for streaming processes
+# PAD: A predictive anomaly detection tool for event streams
 
 This project implements a web-based application for online Predictive Anomaly Detection (PAD) in process mining. Our tool is witten in Python using Flask and Docker Platform. At the moment, the tool contains three components with the following architecture.
 
