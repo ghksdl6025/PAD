@@ -36,4 +36,5 @@ python add_new_event.py -m stop
 ```
 
 ## Tutorial video
-In this video, you can watch a demonstration of the tool which introduces the main features and the how to use the tool step-by-step. 
+In this video, you can watch a demonstration of the tool which introduces the main features and the how to use the tool step-by-step.
+[![demo youtube](./img/screenshot%20demo.png)](https://www.youtube.com/watch?v=HGc3ychFVuk)
